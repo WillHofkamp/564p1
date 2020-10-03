@@ -34,6 +34,10 @@ columnSeparator = "|"
 MONTHS = {'Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06',\
         'Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12'}
 
+userIDs = []
+itemIDs = []
+categories = []
+
 """
 Returns true if a file ends in .json
 """
@@ -69,7 +73,6 @@ def transformDollar(money):
     return sub(r'[^\d.]', '', money)
 
 def escapeQuote(description):
-    #print("desc: " + description +"\n")
     count = 0
     for i, c in enumerate(description):
         if c == "\"":
@@ -84,15 +87,15 @@ item in the data set. Your job is to extend this functionality to create all
 of the necessary SQL tables for your database.
 """
 def parseJson(json_file):
-    with open(json_file, 'r') as f:
+    with open(json_file, 'r') as f: 
         items = loads(f.read())['Items'] # creates a Python dictionary of Items for the supplied json file
+        "Open .dat file for each table used"
         itemsTable = open("itemsTable.dat","a")
         bidsTable = open("bidsTable.dat","a")
         usersTable = open("usersTable.dat","a")
         categoryTable = open("categoryTable.dat","a")
-        userIDs = []
-        itemIDs = []
-        bidCount = 0
+
+        "Initialize variables for duplicate checking"
         for item in items:
             if item["ItemID"] not in itemIDs:
                 itemIDs.append(item["ItemID"])
@@ -101,15 +104,17 @@ def parseJson(json_file):
                         #add to usersTable only if the user doesn't exist
                         if value['UserID'] not in userIDs:
                             userIDs.append(value['UserID'])
-                            usersTable.write(str(value["UserID"])+"|"+value["Rating"]+"|"+escapeQuote(item["Location"])
+                            usersTable.write(escapeQuote(str(value["UserID"]))+"|"+value["Rating"]+"|"+escapeQuote(item["Location"])
                                             +"|"+escapeQuote(item["Country"]) +"\n")
                     elif key  == "Category":
                         for category in value:
-                            categoryTable.write(str(item["ItemID"])+ "|" + category+"\n")
+                            #add to categoryTable only if the category doesn't exist
+                            if category not in categories:
+                                categories.append(category)
+                                categoryTable.write(str(item["ItemID"])+ "|" + category+"\n")
                     #skip empty Bids
                     elif key == "Bids":
-                        if value: 
-                            bidCount += len(value)
+                        if value:
                             for bid in value:
                                 bidTime = transformDttm(bid["Bid"]["Time"])
                                 bidAmount = transformDollar(bid["Bid"]["Amount"])
@@ -130,46 +135,34 @@ def parseJson(json_file):
                                         country = bid["Bid"]["Bidder"]["Country"]
                                         country = escapeQuote(country)
                                    
-                                    usersTable.write(bidUserId+"|"+bid["Bid"]["Bidder"]["Rating"]+"|"+location+"|"+country+"\n")
+                                    usersTable.write(escapeQuote(bidUserId)+"|"+bid["Bid"]["Bidder"]["Rating"]+"|"+location+"|"+country+"\n")
+                    
+                    elif key in {"Currently", "First_Bid"}:
+                        value = transformDollar(value)
+                        itemsTable.write(str(value)+"|")
+                    elif key in {"Started", "Ends"}:
+                        value = transformDttm(value)
+                        itemsTable.write(str(value)+"|")
+                    elif key in {"Description", "Name"}:
+                        value = value.replace('"', '""') if value is not None else ""
+                        value = "\"" + value + "\""
+                        itemsTable.write(str(value)+"|")
                     elif key in {"Location", "Country", "Buy_Price"}:
                         pass
-                    else:                      
-                        if key in {"Currently", "First_Bid"}:
-                            value = transformDollar(value)
-                        if key in {"Started", "Ends"}:
-                            value = transformDttm(value)
-                        #if isinstance(value, str):   
-                        if key in {"Description", "Name"}:
-                            #this works without error
-                            value = value.replace('"', '""') if value is not None else ""
-                            value = "\"" + value + "\""
-                            
-                            #still has "unescaped character" issue if run code below
-                            '''
-                            if value is not None:
-                                value = escapeQuote(value) 
-                                value = "\"" + value + "\""
-                            '''
-                            
-                        '''
-                        if key == "Ends":
-                            value += "Ends"
-                        if key == "First_Bid":
-                            value += "First_Bid"
-                        if key == "Currently":
-                            value += "Currently"
-                        if key == "Number_of_Bids":
-                            value += "NumerBids"
-                        '''
-                        itemsTable.write(str(value)+"|")
+                    else:
+                        if isinstance(value, str):
+                            value = escapeQuote(value)
+                            itemsTable.write(str(value)+"|")
                         
                     pass
-                # User_ID+Buy_price, last two columns
+                #last column is the seller's user id and a new line
                 if "Buy_Price" not in item.keys():
                     itemsTable.write(str(item["Seller"]['UserID'])+"|NULL"+"\n")
                 else:
                     itemsTable.write(str(item["Seller"]['UserID'])+"|"+transformDollar(item["Buy_Price"])+"\n")
+
             pass
+        #close all tables/files after we are finished using them
         itemsTable.close()
         bidsTable.close()
         usersTable.close()
