@@ -69,6 +69,7 @@ def transformDollar(money):
     return sub(r'[^\d.]', '', money)
 
 def escapeQuote(description):
+    #print("desc: " + description +"\n")
     count = 0
     for i, c in enumerate(description):
         if c == "\"":
@@ -132,13 +133,24 @@ def parseJson(json_file):
                                     usersTable.write(bidUserId+"|"+bid["Bid"]["Bidder"]["Rating"]+"|"+location+"|"+country+"\n")
                     elif key in {"Location", "Country", "Buy_Price"}:
                         pass
-                    else:
+                    else:                      
                         if key in {"Currently", "First_Bid"}:
                             value = transformDollar(value)
                         if key in {"Started", "Ends"}:
                             value = transformDttm(value)
-                        if isinstance(value, str):
-                            value = escapeQuote(value)
+                        #if isinstance(value, str):   
+                        if key in {"Description", "Name"}:
+                            #this works without error
+                            value = value.replace('"', '""') if value is not None else ""
+                            value = "\"" + value + "\""
+                            
+                            #still has "unescaped character" issue if run code below
+                            '''
+                            if value is not None:
+                                value = escapeQuote(value) 
+                                value = "\"" + value + "\""
+                            '''
+                            
                         '''
                         if key == "Ends":
                             value += "Ends"

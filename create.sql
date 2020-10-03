@@ -1,3 +1,8 @@
+drop table if exists Users;
+drop table if exists Items;
+drop table if exists Bids;
+drop table if exists Category;
+
 create table Users(
 	UserID		VARCHAR,
 	Rating		INT,
