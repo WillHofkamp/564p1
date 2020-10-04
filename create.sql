@@ -1,10 +1,9 @@
+drop table if exists Users;
+drop table if exists Items;
+drop table if exists Bids;
+drop table if exists Category;
 
-DROP TABLE IF EXISTS Users;
-DROP TABLE IF EXISTS Items;
-DROP TABLE IF EXISTS Bids;
-DROP TABLE IF EXISTS Category;
-
-CREATE TABLE Users(
+create table Users(
 	UserID		VARCHAR,
 	Rating		INT,
 	Location	VARCHAR,
@@ -12,7 +11,7 @@ CREATE TABLE Users(
 	PRIMARY KEY (UserID)
 ); 
 
-CREATE TABLE Items(
+create table Items(
 	ItemID		INT,
 	Ends		DATE NOT NULL,
 	First_Bid	DOUBLE NOT NULL,
@@ -27,17 +26,17 @@ CREATE TABLE Items(
 	FOREIGN KEY (Seller_ID) REFERENCES Users(UserID)
 );
 
-CREATE TABLE Bids(
+create table Bids(
 	UserID		VARCHAR,
 	ItemID		INT NOT NULL,
 	Time		DATE NOT NULL,
-	Amount		VARCHAR NOT NULL,
+	Amount		DOUBLE NOT NULL,
 	PRIMARY KEY (UserID, Time, Amount, ItemID), --maybe can be reduce to 3
 	FOREIGN KEY (UserID) REFERENCES Users(UserID),
 	FOREIGN KEY (ItemID) REFERENCES Items(ItemID)
 );
 
-CREATE TABLE Category(
+create table Category(
 	ItemID		INT,
 	Name		VARCHAR,
 	PRIMARY KEY (Name, ItemID),
