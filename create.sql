@@ -1,3 +1,11 @@
+/*
+This file: create.sql
+Main file: runParser.sh
+Authors: Mitch McClure, Ziwei Ren, Will Hofkamp
+Create the users, items, bids, and category tables for the ebay data
+to be inserted into. If those tables already exist, they will be dropped
+*/
+
 DROP TABLE IF EXISTS Users;
 DROP TABLE IF EXISTS Items;
 DROP TABLE IF EXISTS Bids;
