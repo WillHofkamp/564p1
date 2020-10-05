@@ -139,8 +139,10 @@ def parseJson(json_file):
             if item["ItemID"] not in itemIDs:
                 itemIDs.append(item["ItemID"])
                 for key, value in item.items():
+                    
                     if key == "Seller":
                         printSeller(value, item, usersTable)
+                        itemsTable.write(str(value["UserID"])+"|")
                     elif key == "Bids":
                         printBid(value, item, usersTable, bidsTable)
                     elif key  == "Category":
@@ -159,15 +161,14 @@ def parseJson(json_file):
                     elif key in {"Location", "Country", "Buy_Price"}:
                         pass
                     else:
-                        if isinstance(value, str):
-                            value = escapeQuotes(value)
-                            itemsTable.write(str(value)+"|")
+                        value = escapeQuotes(value)
+                        itemsTable.write(str(value)+"|")
 
-                #last column is the seller's user id and a new line
+                #last column is the buy price since it is optional and a new line
                 if "Buy_Price" not in item.keys():
-                    itemsTable.write(escapeQuotes(str(item["Seller"]['UserID']))+"|NULL"+"\n")
+                    itemsTable.write("NULL"+"\n")
                 else:
-                    itemsTable.write(escapeQuotes(str(item["Seller"]['UserID']))+"|"+transformDollar(item["Buy_Price"])+"\n")
+                    itemsTable.write(transformDollar(item["Buy_Price"])+"\n")
 
             pass
         #close all tables/files after we are finished using them
